@@ -1,7 +1,6 @@
 from langgraph.graph import StateGraph
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
-from app.main import sysprompt
 from app.classifier import classifier_node, AgentState
 from app.agents.crm_agent import crm_agent_node
 
@@ -9,7 +8,9 @@ builder = StateGraph(AgentState)
 
 def unknown_node(state: AgentState) -> AgentState:
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
-    response = llm([HumanMessage(content=sysprompt + state["question"])])
+    response = llm([HumanMessage(content="""
+You are a smart Chatbot API for an online shop, designed to handle customer relationship management (CRM) queries.
+""" + state["question"])])
     return {
         **state,
         "answer": response.content
@@ -27,6 +28,8 @@ builder.add_conditional_edges(
         "unknown": "unknown"
     }
 )
+
+builder.set_entry_point("classify")
 
 builder.set_finish_point("unknown")
 builder.set_finish_point("crm-agent")

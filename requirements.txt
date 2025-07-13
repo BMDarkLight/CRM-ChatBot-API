@@ -10,4 +10,7 @@ httpx
 pydantic
 pytest
 numpy
+jose
+jwt
+secrets
 python-dotenv
