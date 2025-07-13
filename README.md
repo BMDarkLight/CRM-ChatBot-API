@@ -40,7 +40,7 @@ This project implements an **AI-powered chatbot API** for customer relationship 
 │   ├── crm_client.py     # Integration with Didar CRM API
 │   ├── classifier.py     # Topic classification logic
 │   ├── agents/
-│   │   ├── support_bot.py  # Specialized bot for CRM queries
+│   │   ├── crm_agent.py  # Specialized bot for CRM queries
 ├── tests/                # Pytest test cases
 ├── Dockerfile            # Docker image definition
 ├── .github/workflows
@@ -64,8 +64,8 @@ cd crm-chatbot-api
 Create a **.env** file or export them in your shell :
 
 ```env
-LANGCHAIN_API_KEY=your_langsmith_key
-LANGCHAIN_PROJECT=crm-chatbot
+LANGSMITH_API_KEY=your_langsmith_key
+OPENAI_API_KEY=your_openai_key
 DIDAR_API_KEY=your_didar_key
 ```
 
