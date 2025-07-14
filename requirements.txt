@@ -9,8 +9,11 @@ langsmith
 httpx
 pydantic
 pytest
+pytest-asyncio
 numpy
 python-jose
 python-multipart
+pymongo
+qdrant-client
 jwt
 python-dotenv
