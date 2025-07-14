@@ -16,4 +16,5 @@ python-multipart
 pymongo
 qdrant-client
 jwt
+fastapi-security
 python-dotenv

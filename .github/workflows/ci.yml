@@ -17,7 +17,18 @@ jobs:
       AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
       AUTH_ALGORITHM: ${{ secrets.AUTH_ALGORITHM }}
       AUTH_TOKEN_EXPIRE: ${{ secrets.AUTH_TOKEN_EXPIRE }}
+      MONGO_URI: mongodb://localhost:27017
       
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
 
     steps:
       - name: Checkout code
