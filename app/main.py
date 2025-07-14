@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing import Optional, List
-from bson import ObjectId
 from dotenv import load_dotenv
 from app.agent import graph, sessions_db
 from app.auth import create_access_token, verify_token, users_db
@@ -37,6 +36,9 @@ def admin_required(token: str = Depends(oauth2_scheme)):
     return True
 
 load_dotenv()
+
+# Ensure session_id uniqueness in MongoDB
+sessions_db.create_index("session_id", unique=True)
 
 @app.get("/health")
 def health_check():
@@ -204,14 +206,22 @@ def ask(query: QueryRequest, token: str = Depends(oauth2_scheme)):
 
     result = graph.invoke(state)
 
-    sessions_db.update_one(
-        {"session_id": session_id},
-        {"$set": {
-            "chat_history": result["chat_history"],
-            "user_id": user["_id"]
-        }},
-        upsert=True
-    )
+    if not session:
+        try:
+            sessions_db.insert_one({
+                "session_id": session_id,
+                "chat_history": result["chat_history"],
+                "user_id": user["_id"]
+            })
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="Session ID conflict")
+    else:
+        sessions_db.update_one(
+            {"session_id": session_id},
+            {"$set": {
+                "chat_history": result["chat_history"]
+            }}
+        )
 
     return QueryResponse(
         agent = result["agent"],
