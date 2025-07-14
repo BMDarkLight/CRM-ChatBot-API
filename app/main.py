@@ -1,3 +1,4 @@
+from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -67,12 +68,8 @@ def signin(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 
-class UserRequest(BaseModel):
-    token: str = Depends(oauth2_scheme)
-
 @app.get("/users", response_model=List[dict])
-def list_users(UserRequest: UserRequest):
-    token = UserRequest.token
+def list_users(token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
@@ -87,8 +84,7 @@ def list_users(UserRequest: UserRequest):
     return users
 
 @app.get("/users/{username}")
-def get_user(username: str,UserRequest: UserRequest):
-    token = UserRequest.token
+def get_user(username: str, token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
@@ -106,11 +102,9 @@ def get_user(username: str,UserRequest: UserRequest):
         raise HTTPException(status_code=404, detail="User not found")
     
     return user_data
-    
 
 @app.delete("/users/{username}")
-def delete_user(username: str, UserRequest: UserRequest):
-    token = UserRequest.token
+def delete_user(username: str, token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated") 
     try:
@@ -129,12 +123,8 @@ def delete_user(username: str, UserRequest: UserRequest):
     
     return {"message": f"User '{username}' and {resultsession.deleted_count} session(s) deleted successfully"}
 
-class SessionRequest(BaseModel):
-    token: str = Depends(oauth2_scheme)
-
 @app.get("/sessions", response_model=List[dict])
-def list_sessions(SessionRequest: SessionRequest):
-    token = SessionRequest.token
+def list_sessions(token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
@@ -147,8 +137,7 @@ def list_sessions(SessionRequest: SessionRequest):
     return sessions
 
 @app.get("/sessions/{session_id}", response_model=dict)
-def get_session(session_id: str, SessionRequest: SessionRequest):
-    token = SessionRequest.token
+def get_session(session_id: str, token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
@@ -162,11 +151,9 @@ def get_session(session_id: str, SessionRequest: SessionRequest):
         raise HTTPException(status_code=404, detail="Session not found")
     
     return session
-    
 
 @app.delete("/sessions/{session_id}")
-def delete_session(session_id: str, SessionRequest: SessionRequest):
-    token = SessionRequest.token
+def delete_session(session_id: str, token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
@@ -184,15 +171,13 @@ def delete_session(session_id: str, SessionRequest: SessionRequest):
 class QueryRequest(BaseModel):
     query: str
     session_id: Optional[str] = None
-    token: str = Depends(oauth2_scheme)
 
 class QueryResponse(BaseModel):
     agent: str
     response: str
 
 @app.post("/ask", response_model=QueryResponse)
-def ask(query: QueryRequest):
-    token = query.token
+def ask(query: QueryRequest, token: str = Depends(oauth2_scheme)):
     session_id = query.session_id or str(uuid.uuid4())
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -247,8 +232,7 @@ async def main_page():
             <h1>API Documentation</h1>
             <p>To access the Chatbot, <a href="/chatbot">Click here</a>.</p>
             <p>To access the API, <a href="/login">Login Here</a>.</p>
-            <p>To explore the API documentation, visit <a href="/docs">/docs</a></p>
-            <p>To access the OpenAPI schema, visit <a href="/openapi.json">/openapi.json</a></p>
+            <p>To explore the API documentation, Visit <a href="/docs">Documentation</a></p>
             <h1>GitHub Repository</h1>
             <p>For source code and contributions, visit the <a href="https://github.com/BMDarkLight/CRM-ChatBot-API">GitHub repository</a>.</p>
         </body>
@@ -342,79 +326,108 @@ def chatbot():
             <meta charset="UTF-8" />
         </head>
         <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px;">
-            <div id="authorize">
-            <h1>Authorize</h1>
-                <form id="token-form" style="display: inline-block;">
-                    <p>Enter your access token to use API:
-                    <input type="text" id="token-input" name="token" required></p>
-                    <button type="submit">Authorize</button>
-                </form><br>
-                <p>If you don't have an access token, please <a href="/login">Login Here</a>.</p>
+            <h1>CRM Chatbot Interface</h1>
+
+            <div id="auth-section">
+                <h2>Login</h2>
+                <div id="login-container" style="display: flex; justify-content: space-between; border: 1px solid #ccc; padding: 20px; margin: 20px; border-radius: 10px;background-color: #f9f9f9; text-align: center;">
+                    <form id="login-form">
+                        <label>Username: <input type="text" id="login-username" required></label><br>
+                        <label>Password: <input type="password" id="login-password" required></label><br>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+                <pre id="auth-output"></pre>
             </div>
+
             <div id="chat-container" style="display: none; border: 1px solid #ccc;">
-                <div id="chat-history" style="max-height: 90%; overflow-y: auto; margin-bottom: 20px;"></div>
-                <input type="text" id="user-input" placeholder="Type your message here..." style="width: 100%; padding: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc;">
+                <div id="chat-history" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;"></div>
+                <input type="text" id="user-input" placeholder="Type your message here..." style="width: 100%; padding: 10px; box-sizing: border-box;">
                 <button id="send-button">Send</button>
             </div>
 
             <script>
-            function generateRandomString(length) {
-                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let result = '';
-                for (let i = 0; i < length; i++) {
-                    const randomIndex = Math.floor(Math.random() * characters.length);
-                    result += characters.charAt(randomIndex);
-                }
-                return result;
-            }
-            const sessionId = generateRandomString(16);
-            document.getElementById("token-form").addEventListener("submit", async function(e) {
-                e.preventDefault();
-                const token = document.getElementById("token-input").value;
-                if (!token) {
-                    alert("Please enter a valid token.");
-                    return;
-                }
+            const sessionId = Math.random().toString(36).substring(2, 18);
 
-                localStorage.setItem("access_token", token);
-                document.getElementById("authorize").style.display = "none";
-                document.getElementById("chat-container").style.display = "block";
+            document.getElementById("login-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                const username = document.getElementById("login-username").value;
+                const password = document.getElementById("login-password").value;
+                const formData = new URLSearchParams();
+                formData.append("username", username);
+                formData.append("password", password);
+
+                const response = await fetch("/signin", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    localStorage.setItem("access_token", result.access_token);
+                    document.getElementById("auth-section").style.display = "none";
+                    document.getElementById("chat-container").style.display = "block";
+                }
+                document.getElementById("auth-output").textContent = JSON.stringify(result, null, 2);
             });
+
             document.getElementById("send-button").addEventListener("click", async function() {
-                document.getElementById("send-button").disabled = true;
                 const token = localStorage.getItem("access_token");
                 const userInput = document.getElementById("user-input").value;
-                
-                if (!token) {
-                    alert("Please authorize first.");
-                    return;
-                }
-                if (!userInput) {
-                    alert("Please enter a message.");
+
+                if (!token || !userInput) {
+                    alert("Missing token or input.");
                     return;
                 }
 
                 const response = await fetch("/ask", {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
                     },
-                    body: JSON.stringify({ query: userInput , session_id: sessionId, token: token })
+                    body: JSON.stringify({ query: userInput, session_id: sessionId })
                 });
+
+                const result = await response.json();
                 if (!response.ok) {
-                    const error = await response.json();
-                    alert(`Error: ${error.detail}`);
+                    alert("Error: " + result.detail);
                     return;
                 }
-                const result = await response.json();
+
                 const chatHistory = document.getElementById("chat-history");
                 chatHistory.innerHTML += `<div><b>You:</b> ${userInput}</div>`;
-                chatHistory.innerHTML += `<div><b>Bot (using "${result.agent}" agent):</b> ${result.response}</div>`;
+                chatHistory.innerHTML += `<div><b>Bot (${result.agent}):</b> ${result.response}</div>`;
                 document.getElementById("user-input").value = "";
-                document.getElementById("send-button").disabled = false;
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             });
             </script>
         </body>
     </html>
     """
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="CRM Chatbot API",
+        version="1.0.0",
+        description="AI-powered CRM Chatbot integrated with Didar CRM",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    for path in openapi_schema["paths"].values():
+        for operation in path.values():
+            operation["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
