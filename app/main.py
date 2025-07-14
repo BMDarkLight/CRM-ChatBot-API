@@ -37,27 +37,6 @@ def admin_required(token: str = Depends(oauth2_scheme)):
 
 load_dotenv()
 
-@app.get("/", response_class=HTMLResponse)
-async def main_page():
-    return """
-    <html>
-        <head>
-            <title>🛒 CRM Chatbot API for Online Shop</title>
-            <meta charset="UTF-8" />
-        </head>
-        <body>
-            <h1>🛒 CRM Chatbot API for Online Shop</h1>
-            <p>This project implements an AI-powered chatbot API for customer relationship management (CRM) in an online shop, seamlessly integrated with Didar CRM. It leverages advanced language model orchestration with LangChain and LangGraph, includes robust LangSmith tracing for monitoring agent behavior, and uses FastAPI for a high-performance web API layer. The project is fully containerized with Docker and supports on-demand testing via GitHub Actions.</p>
-            <h1>API Documentation</h1>
-            <p>To explore the API documentation, visit <a href="/docs">/docs</a></p>
-            <p>To access the OpenAPI schema, visit <a href="/openapi.json">/openapi.json</a></p>
-            <p>To access the API, <a href="/login">Login Here</a>.</p>
-            <h1>GitHub Repository</h1>
-            <p>For source code and contributions, visit the <a href="https://github.com/BMDarkLight/CRM-ChatBot-API">GitHub repository</a>.</p>
-        </body>
-    </html>
-    """
-
 @app.get("/health")
 def health_check():
     return JSONResponse(content={"status": True})
@@ -84,79 +63,9 @@ def signin(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.get("/login", response_class=HTMLResponse)
-def login():
-    return """
-<html>
-    <head>
-        <title>API Login</title>
-        <meta charset="UTF-8" />
-    </head>
-    <body>
-        <h1>Login</h1>
-        <form id="login-form">
-            <label for="login-username">Username:</label>
-            <input type="text" id="login-username" name="username" required>
-            <label for="login-password">Password:</label>
-            <input type="password" id="login-password" name="password" required>
-            <button type="submit">Sign In</button>
-        </form>
 
-        <h1>Sign Up</h1>
-        <form id="signup-form">
-            <label for="signup-username">Username:</label>
-            <input type="text" id="signup-username" name="username" required>
-            <label for="signup-password">Password:</label>
-            <input type="password" id="signup-password" name="password" required>
-            <button type="submit">Sign Up</button>
-        </form>
 
-        <pre id="output"></pre>
 
-        <script>
-        document.getElementById("login-form").addEventListener("submit", async function(e) {
-            e.preventDefault();
-            const username = document.getElementById("login-username").value;
-            const password = document.getElementById("login-password").value;
-            const formData = new URLSearchParams();
-            formData.append("username", username);
-            formData.append("password", password);
-
-            const response = await fetch("/signin", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: formData
-            });
-
-            const result = await response.json();
-            document.getElementById("output").textContent = JSON.stringify(result, null, 2);
-        });
-
-        document.getElementById("signup-form").addEventListener("submit", async function(e) {
-            e.preventDefault();
-            const username = document.getElementById("signup-username").value;
-            const password = document.getElementById("signup-password").value;
-            const formData = new URLSearchParams();
-            formData.append("username", username);
-            formData.append("password", password);
-
-            const response = await fetch("/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: formData
-            });
-
-            const result = await response.json();
-            document.getElementById("output").textContent = JSON.stringify(result, null, 2);
-        });
-        </script>
-    </body>
-</html>
-"""
 
 class UserRequest(BaseModel):
     token: str = Depends(oauth2_scheme)
@@ -323,3 +232,189 @@ def ask(query: QueryRequest):
         agent = result["agent"],
         response = result.get("answer", "No answer provided")
     )
+
+@app.get("/", response_class=HTMLResponse)
+async def main_page():
+    return """
+    <html>
+        <head>
+            <title>🛒 CRM Chatbot API for Online Shop</title>
+            <meta charset="UTF-8" />
+        </head>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px;">
+            <h1>🛒 CRM Chatbot API for Online Shop</h1>
+            <p>This project implements an AI-powered chatbot API for customer relationship management (CRM) in an online shop, seamlessly integrated with Didar CRM. It leverages advanced language model orchestration with LangChain and LangGraph, includes robust LangSmith tracing for monitoring agent behavior, and uses FastAPI for a high-performance web API layer. The project is fully containerized with Docker and supports on-demand testing via GitHub Actions.</p>
+            <h1>API Documentation</h1>
+            <p>To access the Chatbot, <a href="/chatbot">Click here</a>.</p>
+            <p>To access the API, <a href="/login">Login Here</a>.</p>
+            <p>To explore the API documentation, visit <a href="/docs">/docs</a></p>
+            <p>To access the OpenAPI schema, visit <a href="/openapi.json">/openapi.json</a></p>
+            <h1>GitHub Repository</h1>
+            <p>For source code and contributions, visit the <a href="https://github.com/BMDarkLight/CRM-ChatBot-API">GitHub repository</a>.</p>
+        </body>
+    </html>
+    """
+
+@app.get("/login", response_class=HTMLResponse)
+def login():
+    return """
+    <html>
+        <head>
+            <title>API Login</title>
+            <meta charset="UTF-8" />
+        </head>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px;">
+            <h1>Login</h1>
+            <div style="display: flex; justify-content: space-between; border: 1px solid #ccc; padding: 20px; margin: 20px; border-radius: 10px;background-color: #f9f9f9; text-align: center;">
+                <form id="login-form" style="display: inline-block;">
+                    <label for="login-username">Username:</label>
+                    <input type="text" id="login-username" name="username" required></p>
+                    <p><label for="login-password">Password:</label>
+                    <input type="password" id="login-password" name="password" required></p>
+                    <button type="submit">Sign In</button>
+                </form>
+            </div>
+
+            <h1>Sign Up</h1>
+            <div style="display: flex; justify-content: space-between; border: 1px solid #ccc; padding: 20px; margin: 20px; border-radius: 10px;background-color: #f9f9f9; text-align: center;">
+                <form id="signup-form" style="display: inline-block;">
+                    <p><label for="signup-username">Username:</label>
+                    <input type="text" id="signup-username" name="username" required></p>
+                    <p><label for="signup-password">Password:</label>
+                    <input type="password" id="signup-password" name="password" required></p>
+                    <button type="submit">Sign Up</button>
+                </form>
+            </div>
+
+            <pre id="output"></pre>
+
+            <script>
+            document.getElementById("login-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                const username = document.getElementById("login-username").value;
+                const password = document.getElementById("login-password").value;
+                const formData = new URLSearchParams();
+                formData.append("username", username);
+                formData.append("password", password);
+
+                const response = await fetch("/signin", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+            });
+
+            document.getElementById("signup-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                const username = document.getElementById("signup-username").value;
+                const password = document.getElementById("signup-password").value;
+                const formData = new URLSearchParams();
+                formData.append("username", username);
+                formData.append("password", password);
+
+                const response = await fetch("/signup", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+            });
+            </script>
+        </body>
+    </html>
+    """
+
+@app.get("/chatbot", response_class=HTMLResponse)
+def chatbot():
+    return """
+    <html>
+        <head>
+            <title>Chatbot Interface</title>
+            <meta charset="UTF-8" />
+        </head>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px;">
+            <div id="authorize">
+            <h1>Authorize</h1>
+                <form id="token-form" style="display: inline-block;">
+                    <p>Enter your access token to use API:
+                    <input type="text" id="token-input" name="token" required></p>
+                    <button type="submit">Authorize</button>
+                </form><br>
+                <p>If you don't have an access token, please <a href="/login">Login Here</a>.</p>
+            </div>
+            <div id="chat-container" style="display: none; border: 1px solid #ccc;">
+                <div id="chat-history" style="max-height: 90%; overflow-y: auto; margin-bottom: 20px;"></div>
+                <input type="text" id="user-input" placeholder="Type your message here..." style="width: 100%; padding: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc;">
+                <button id="send-button">Send</button>
+            </div>
+
+            <script>
+            function generateRandomString(length) {
+                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let result = '';
+                for (let i = 0; i < length; i++) {
+                    const randomIndex = Math.floor(Math.random() * characters.length);
+                    result += characters.charAt(randomIndex);
+                }
+                return result;
+            }
+            const sessionId = generateRandomString(16);
+            document.getElementById("token-form").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                const token = document.getElementById("token-input").value;
+                if (!token) {
+                    alert("Please enter a valid token.");
+                    return;
+                }
+
+                localStorage.setItem("access_token", token);
+                document.getElementById("authorize").style.display = "none";
+                document.getElementById("chat-container").style.display = "block";
+            });
+            document.getElementById("send-button").addEventListener("click", async function() {
+                document.getElementById("send-button").disabled = true;
+                const token = localStorage.getItem("access_token");
+                const userInput = document.getElementById("user-input").value;
+                
+                if (!token) {
+                    alert("Please authorize first.");
+                    return;
+                }
+                if (!userInput) {
+                    alert("Please enter a message.");
+                    return;
+                }
+
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ query: userInput , session_id: sessionId, token: token })
+                });
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail}`);
+                    return;
+                }
+                const result = await response.json();
+                const chatHistory = document.getElementById("chat-history");
+                chatHistory.innerHTML += `<div><b>You:</b> ${userInput}</div>`;
+                chatHistory.innerHTML += `<div><b>Bot (using "${result.agent}" agent):</b> ${result.response}</div>`;
+                document.getElementById("user-input").value = "";
+                document.getElementById("send-button").disabled = false;
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            });
+            </script>
+        </body>
+    </html>
+    """
