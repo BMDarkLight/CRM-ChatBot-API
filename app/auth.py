@@ -33,9 +33,11 @@ def verify_token(token: str):
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
         user = users_db.find_one({"username": username})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
-        return username
+
+        return user
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")

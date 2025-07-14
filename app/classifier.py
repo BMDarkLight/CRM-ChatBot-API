@@ -5,8 +5,15 @@ llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
 
 AgentType = Literal["crm-agent", "unknown"]
 
+class ChatHistoryEntry(TypedDict):
+    user: str
+    assistant: str
+    agent: AgentType
+
 class AgentState(TypedDict, total=False):
     question: str
+    chat_history: list[ChatHistoryEntry]
+    session_id: str
     agent: AgentType
     answer: str
 
@@ -16,7 +23,8 @@ def classifier_node(state: AgentState) -> AgentState:
     system_prompt = (
         "You are a smart classifier. Your job is to categorize a user's question as pass the prompt the related agent."
         "into one of the following topics: crm-agent.\n"
-        "Return only one word as response. "
+        "Return only one word as response."
+        "Return crm-agent if the question is related to customer relationship management, questions about orders, products, or customer support."
         "If it doesn't clearly fit, return 'unknown'."
         "Your responses should be either 'crm-agent', 'unknown' regardless of the prompt you receive after this."
     )

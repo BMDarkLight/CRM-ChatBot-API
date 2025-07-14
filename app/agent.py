@@ -1,20 +1,13 @@
 from langgraph.graph import StateGraph
-from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+from pymongo import MongoClient
 from app.classifier import classifier_node, AgentState
 from app.agents.crm_agent import crm_agent_node
+from app.agents.unknown import unknown_node
+import os
 
 builder = StateGraph(AgentState)
 
-def unknown_node(state: AgentState) -> AgentState:
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
-    response = llm([HumanMessage(content="""
-You are a smart Chatbot API for an online shop, designed to handle customer relationship management (CRM) queries.
-""" + state["question"])])
-    return {
-        **state,
-        "answer": response.content
-    }
+sessions_db = MongoClient(os.environ.get("MONGO_URI", "mongodb://localhost:27017/")).crm.sessions
 
 builder.add_node("classify", classifier_node)
 builder.add_node("crm-agent", crm_agent_node)

@@ -3,15 +3,13 @@ version: "3.9"
 services:
   app:
     build: .
-    container_name: fastapi-app
+    container_name: crm-chatbot-api
     ports:
       - "8000:8000"
     depends_on:
       - mongodb
-      - qdrant
     environment:
       - MONGO_URI=mongodb://mongodb:27017
-      - QDRANT_URL=http://qdrant:6333
     volumes:
       - .:/app
     restart: always
@@ -25,15 +23,5 @@ services:
       - mongo_data:/data/db
     restart: always
 
-  qdrant:
-    image: qdrant/qdrant:v1.7.3
-    container_name: qdrant
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant_data:/qdrant/storage
-    restart: always
-
 volumes:
   mongo_data:
-  qdrant_data:

@@ -14,7 +14,7 @@ numpy
 python-jose
 python-multipart
 pymongo
-qdrant-client
 jwt
+passlib[bcrypt]
 fastapi-security
 python-dotenv
