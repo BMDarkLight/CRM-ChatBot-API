@@ -129,15 +129,13 @@ def login():
 
 class QueryRequest(BaseModel):
     query: str
-    token: str = Depends(oauth2_scheme)
 
 class QueryResponse(BaseModel):
     agent: str
     response: str
 
 @app.post("/ask", response_model=QueryResponse)
-def ask(query: QueryRequest):
-    token = query.token
+def ask(query: QueryRequest, token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:

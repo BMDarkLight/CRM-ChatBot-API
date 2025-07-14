@@ -13,7 +13,7 @@ def generate_random_string(length: int = 12) -> str:
 
 SECRET_KEY = os.environ.get("AUTH_SECRET_KEY", generate_random_string(32))
 ALGORITHM = os.environ.get("AUTH_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = os.environ.get("AUTH_TOKEN_EXPIRE", 120)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("AUTH_TOKEN_EXPIRE", 1440))
 
 users_db = MongoClient(os.environ.get("MONGO_URI", "mongodb://localhost:27017/")).crm.users
 
