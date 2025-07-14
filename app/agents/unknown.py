@@ -1,7 +1,10 @@
 from langchain_community.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langsmith import traceable
 from app.classifier import AgentState
 
+
+@traceable
 def unknown_node(state: AgentState) -> AgentState:
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
     summerizer = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)

@@ -1,9 +1,11 @@
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langsmith import traceable
 from app.classifier import AgentState
 from app.crm_client import CRMClient
 import os
 
+@traceable
 def crm_agent_node(state: AgentState) -> AgentState:
     crm_client = CRMClient(api_key=os.environ.get("DIDAR_API_KEY"))
     
