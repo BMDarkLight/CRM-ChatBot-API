@@ -37,11 +37,14 @@ This project implements an **AI-powered chatbot API** for customer relationship 
 ├── app/
 │   ├── main.py           # FastAPI app entrypoint
 │   ├── agent.py          # LangGraph agent implementation
+│   ├── auth.py           # Authorization Process
 │   ├── crm_client.py     # Integration with Didar CRM API
 │   ├── classifier.py     # Topic classification logic
 │   ├── agents/
 │   │   ├── crm_agent.py  # Specialized bot for CRM queries
+│   │   ├── unknown.py
 ├── tests/                # Pytest test cases
+│   │   ...
 ├── Dockerfile            # Docker image definition
 ├── .github/workflows
 │   │   ├── ci.yml
@@ -61,13 +64,7 @@ cd crm-chatbot-api
 
 ### 2. Setup Environment Variable File
 
-Create a **.env** file or export them in your shell :
-
-```env
-LANGSMITH_API_KEY=your_langsmith_key
-OPENAI_API_KEY=your_openai_key
-DIDAR_API_KEY=your_didar_key
-```
+Use **.env.example** file provided in the repository to curate your own **.env** file and put it in root directory of the project.
 
 ### 3. Run Locally with Docker
 
@@ -77,6 +74,14 @@ docker run -p 8000:8000 --env-file .env crm-chatbot-api
 ```
 
 API will be available at port 8000 using default settings for docker container
+
+You can also pull the lastest build of repository's docker image:
+
+```bash
+docker pull bmdarklight/crm-chatbot-api
+```
+
+https://hub.docker.com/repository/docker/bmdarklight/crm-chatbot-api/general
 
 ---
 
