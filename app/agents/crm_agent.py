@@ -1,5 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langchain_core.tools import Tool
 from langsmith import traceable
 from app.classifier import AgentState
 from app.crm_client import CRMClient
@@ -44,7 +45,7 @@ def crm_agent_node(state: AgentState) -> AgentState:
         messages.append(AIMessage(content=assistant))
 
     messages.append(HumanMessage(content=state["question"]))
-    response = llm(
+    response = llm.invoke(
         messages,
         tools=tools,
         tool_choice="auto",

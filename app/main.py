@@ -206,22 +206,14 @@ def ask(query: QueryRequest, token: str = Depends(oauth2_scheme)):
 
     result = graph.invoke(state)
 
-    if not session:
-        try:
-            sessions_db.insert_one({
-                "session_id": session_id,
-                "chat_history": result["chat_history"],
-                "user_id": user["_id"]
-            })
-        except Exception as e:
-            raise HTTPException(status_code=400, detail="Session ID conflict")
-    else:
-        sessions_db.update_one(
-            {"session_id": session_id},
-            {"$set": {
-                "chat_history": result["chat_history"]
-            }}
-        )
+    sessions_db.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "chat_history": result["chat_history"],
+            "user_id": str(user["_id"])
+        }},
+        upsert=True
+    )
 
     return QueryResponse(
         agent = result["agent"],
@@ -352,8 +344,10 @@ def chatbot():
 
             <div id="chat-container" style="display: none; border: 1px solid #ccc;">
                 <div id="chat-history" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;"></div>
-                <input type="text" id="user-input" placeholder="Type your message here..." style="width: 100%; padding: 10px; box-sizing: border-box;">
-                <button id="send-button">Send</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="user-input" placeholder="Type your message here..." style="flex: 1; padding: 10px; box-sizing: border-box;">
+                    <button id="send-button">Send</button>
+                </div>
             </div>
 
             <script>
@@ -385,6 +379,9 @@ def chatbot():
             });
 
             document.getElementById("send-button").addEventListener("click", async function() {
+                document.getElementById("send-button").disabled = true;
+                document.getElementById("send-button").textContent = "Sending...";
+                document.getElementById("user-input").disabled = true;
                 const token = localStorage.getItem("access_token");
                 const userInput = document.getElementById("user-input").value;
 
@@ -413,11 +410,22 @@ def chatbot():
                 chatHistory.innerHTML += `<div><b>Bot (${result.agent}):</b> ${result.response}</div>`;
                 document.getElementById("user-input").value = "";
                 chatHistory.scrollTop = chatHistory.scrollHeight;
+                document.getElementById("send-button").disabled = false;
+                document.getElementById("send-button").textContent = "Send";
+                document.getElementById("user-input").disabled = false;
+            });
+            // Add Enter-to-send for user-input
+            document.getElementById("user-input").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    document.getElementById("send-button").click();
+                }
             });
             </script>
         </body>
     </html>
     """
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
