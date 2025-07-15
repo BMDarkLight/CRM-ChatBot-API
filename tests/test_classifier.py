@@ -40,7 +40,7 @@ class TestClassifierNode(unittest.TestCase):
         }
 
         result = classifier_node(state)
-        self.assertIn(result["agent"], ["crm-agent", "unknown"])  # Allow flexibility depending on model behavior
+        self.assertIn(result["agent"], ["crm-agent", "unknown"]) 
 
 if __name__ == "__main__":
     unittest.main()

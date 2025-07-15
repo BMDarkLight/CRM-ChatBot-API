@@ -16,7 +16,7 @@ class CRMClient:
         return response.json()["Response"]
     
     def _get(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        response = self.client.get(self._url(path), json = payload)
+        response = self.client.get(self._url(path), params=payload)
         response.raise_for_status()
         return response.json()["Response"]
     
@@ -25,7 +25,14 @@ class CRMClient:
         response.raise_for_status()
         return response.json()["Response"]
     
-    def list_users(self) -> Dict[str, Any]:
-        response = self._get("/User/List", {})
-        return response
+    def list_users(self):
+        response = self._post("User/List", {})
+        return str(response)
     
+    def list_product_categories(self):
+        response = self._post("product/categories", {})
+        return str(response)
+    
+    def list_products(self):
+        response = self._post("product/GetProductsList", {})
+        return str(response)
