@@ -1,10 +1,11 @@
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
-from langchain_core.tools import Tool
+from langchain_core.tools import Tool, tool
 from langsmith import traceable
 from app.classifier import AgentState
 from app.crm_client import CRMClient
 import os
+import json
 
 @traceable
 def crm_agent_node(state: AgentState) -> AgentState:
@@ -16,7 +17,7 @@ def crm_agent_node(state: AgentState) -> AgentState:
     chat_history = state.get("chat_history", [])
 
     summary_messages = [
-        SystemMessage(content="You are a chat history summarizer. Summarize this chat history:")
+        SystemMessage(content="You are a chat history summarizer. If there is no chat history, return nothing. Summarize this chat history:")
     ]
 
     for user, assistant in chat_history:
@@ -38,7 +39,15 @@ def crm_agent_node(state: AgentState) -> AgentState:
         )
     ]
 
-    tools = []
+    @tool
+    def list_users() -> str:
+        """Lists all users in the CRM system and returns them as a JSON string."""
+        users = crm_client.list_users()
+        return json.dumps([user.model_dump() for user in users])
+
+    tools = [
+        list_users,
+    ]
 
     for user, assistant in chat_history:
         messages.append(HumanMessage(content=user))

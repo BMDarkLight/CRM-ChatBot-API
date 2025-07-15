@@ -12,7 +12,7 @@ def unknown_node(state: AgentState) -> AgentState:
     chat_history = state.get("chat_history", [])
 
     summary_messages = [
-        SystemMessage(content="You are a chat history summarizer. Summarize this chat history:")
+        SystemMessage(content="You are a chat history summarizer. If there is no chat history, return nothing. Summarize this chat history:")
     ]
 
     for user, assistant in chat_history:

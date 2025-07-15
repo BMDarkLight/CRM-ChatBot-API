@@ -28,7 +28,7 @@ def classifier_node(state: AgentState) -> AgentState:
     chat_history = state.get("chat_history", [])
 
     summary_messages = [
-        SystemMessage(content="You are a chat history summarizer. Summarize this chat history:")
+        SystemMessage(content="You are a chat history summarizer. If there is no chat history, return nothing. Summarize this chat history:")
     ]
 
     for user, assistant in chat_history:
@@ -48,17 +48,23 @@ def classifier_node(state: AgentState) -> AgentState:
             last_entry_answer = last_entry[1] if len(last_entry) > 1 else ""
             last_entry_agent = "unknown"
 
-    system_prompt = (
-        "You are a smart classifier. Your job is to categorize a user's question as pass the prompt the related agent."
-        "into one of the following topics: crm-agent.\n"
-        "Return only one word as response."
-        "Return crm-agent if the question is related to customer relationship management entries, questions about orders, products, or customer support."
-        "If it doesn't clearly fit into the agents described, return 'unknown'."
-        "Your responses should be either 'crm-agent', 'unknown' regardless of the prompt you receive after this."
-        "Here is a summary of the chat history:\n"
-        f"{summary.content.strip()}\n"
-        f"The last question asked by the user is {last_entry_question} and the {last_entry_agent} answered with {last_entry_answer}, if this needs a continuation by the same agent, return that agent to answer" if last_entry != None else ""
-    )
+    if not chat_history:
+        system_prompt = (
+            "You are a smart classifier. Your job is to categorize a user's question and pass the prompt to the related agent.\n"
+            "Return only one word: 'crm-agent' or 'unknown'.\n"
+            "Return 'crm-agent' if the question is related to customer relationship management, orders, products, support, or user/account actions.\n"
+            f"The user just asked: '{question}'. Classify this appropriately."
+        )
+    else:
+        system_prompt = (
+            "You are a smart classifier. Your job is to categorize a user's question and pass the prompt to the related agent.\n"
+            "Return only one word: 'crm-agent' or 'unknown'.\n"
+            "Return 'crm-agent' if the question is related to customer relationship management, orders, products, support, or user/account actions.\n"
+            "If it doesn't clearly fit into those, return 'unknown'.\n"
+            f"Here is a summary of the chat history:\n{summary.content.strip()}\n"
+            f"The last question asked by the user is: '{last_entry_question}' and the {last_entry_agent} answered: '{last_entry_answer}'."
+            " If this new question is a follow-up or continuation, return the same agent. Otherwise, classify the new question."
+        )
 
     response = llm.invoke([
         {"role": "system", "content": system_prompt},
