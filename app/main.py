@@ -37,7 +37,6 @@ def admin_required(token: str = Depends(oauth2_scheme)):
 
 load_dotenv()
 
-# Ensure session_id uniqueness in MongoDB
 sessions_db.create_index("session_id", unique=True)
 
 @app.get("/health")
