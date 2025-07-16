@@ -31,6 +31,22 @@ def list_products(requested_prompt: str) -> str:
         'prompt':requested_prompt
     })
 
+def list_activity_types(requested_prompt: str) -> str:
+    activites = crm_client.list_activity_types()
+    return json.dumps({
+        'data':activites,
+        'prompt':requested_prompt
+    })
+
+def list_pipelines(requested_prompt: str) -> str:
+    pipelines = crm_client.list_pipelines()
+    return json.dumps({
+        'data':pipelines,
+        'prompt':requested_prompt
+    })
+
+
+
 def format_json(json_input: str) -> str:
     prohibits = [
         "Id",
