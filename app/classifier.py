@@ -60,6 +60,7 @@ def classifier_node(state: AgentState) -> AgentState:
             "You are a smart classifier. Your job is to categorize a user's question and pass the prompt to the related agent.\n"
             "Return only one word: 'crm-agent' or 'unknown'.\n"
             "Return 'crm-agent' if the prompt is an Imperative sentence or the question is related to customer relationship management, orders, products, support, or user/account actions or it is requesting to pull off an action.\n"
+            "عبارت 'crm-agent' را برگردان اگر پرامپت کاربر یک جمله ی امری است یا کاربر درخواست انجام کاری را انجام داده است یا سوال مرتبط به سیستم CRM، کاریز ها، پشتیبانی، محصولات، سفارشات یا کاربران و مشتریان است.\n"
             "If it doesn't clearly fit into those, return 'unknown'.\n"
             f"Here is a summary of the chat history:\n{summary.content.strip()}\n"
             f"The last question asked by the user is: '{last_entry_question}' and the {last_entry_agent} answered: '{last_entry_answer}'."
