@@ -82,18 +82,12 @@ class CRMClient:
         return f"{self.base_url}/{path}?apikey={self.api_key}"
 
     def _post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        response = self.client.post(self._url(path), json=payload)
-        response.raise_for_status()
-        return response.json()["Response"]
-    
-    def _get(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        response = self.client.get(self._url(path), params=payload)
-        response.raise_for_status()
-        return response.json()["Response"]
-    
-    def _delete(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        response = self.client.delete(self._url(path), json=payload)
-        response.raise_for_status()
+        try:
+            response = self.client.post(self._url(path), json=payload)
+            response.raise_for_status()
+        except:
+            return "Failed to retrieve information from server"
+        
         return response.json()["Response"]
     
     def list_users(self):
@@ -116,8 +110,8 @@ class CRMClient:
         response = self._post("customfield/GetCustomFieldList", {})
         return str(response)
     
-    def list_pipelines(self):
-        response = self._posT("pipeline/list", {})
+    def list_pipelines(self, num: int = 0):
+        response = self._post(f"pipeline/list/{num}", {})
         return str(response)
     
     def search_contact(self, query: str):
