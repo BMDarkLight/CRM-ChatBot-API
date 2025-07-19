@@ -2,12 +2,13 @@ from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing import Optional, List
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from langchain.schema import SystemMessage, AIMessage, HumanMessage
 from app.agent import graph, sessions_db
 from app.auth import create_access_token, verify_token, users_db
 import uuid
@@ -64,10 +65,6 @@ def signin(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     access_token = create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-
-
 
 @app.get("/users", response_model=List[dict])
 def list_users(token: str = Depends(oauth2_scheme)):
@@ -151,7 +148,21 @@ def get_session(session_id: str, token: str = Depends(oauth2_scheme)):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    return session
+    title_generator = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
+
+    chat_history = session["chat_history"]
+
+    prompts = [
+        SystemMessage("You are a title generator. You receive the users chat history in the chatbot and generate a short title based on it. The title should represent what is going on in the chat, the title shouldn't be flashy or trendy, just helpful and straight to the point."),
+    ]
+
+    for user, assistant in chat_history:
+        prompts.append(HumanMessage(content=user))
+        prompts.append(AIMessage(content=assistant))
+    
+    title = title_generator.invoke(prompts)
+    
+    return {**session, "title":title.content}
 
 @app.delete("/sessions/{session_id}")
 def delete_session(session_id: str, token: str = Depends(oauth2_scheme)):
@@ -163,7 +174,11 @@ def delete_session(session_id: str, token: str = Depends(oauth2_scheme)):
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
     
-    result = sessions_db.delete_one({"session_id": session_id}, {"user_id": user["_id"]})
+    result = sessions_db.delete_one({
+        "session_id": session_id,
+        "user_id": str(user["_id"])
+    })
+
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Session not found")
     
